@@ -1,0 +1,6 @@
+@quissile.wwwapi8_HostAddress = http://localhost:5099
+
+GET {{quissile.wwwapi8_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

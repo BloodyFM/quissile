@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\quissile.wwwapi8.props" />
+</Project>

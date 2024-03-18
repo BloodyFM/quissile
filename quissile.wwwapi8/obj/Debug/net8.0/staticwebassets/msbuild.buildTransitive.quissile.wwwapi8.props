@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\quissile.wwwapi8.props" />
+</Project>
