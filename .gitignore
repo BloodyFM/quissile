@@ -1,0 +1,8 @@
+﻿/quissile.wwwapi8/appsettings.json
+/quissile.wwwapi8/appsettings.Development.json
+ */**/bin/Debug   
+*/**/bin/Release   
+*/**/obj/Debug   
+*/**/obj/Release   
+/quissile.wwwapi8/appsettings.json
+/quissile.wwwapi8/appsettings.Development.json
