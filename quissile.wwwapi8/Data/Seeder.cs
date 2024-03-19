@@ -10,10 +10,14 @@ namespace quissile.wwwapi8.Data
         private List<Alternative> _alternatives;
         private List<Quiz> _quizes = new List<Quiz>();
 
-        public Seeder() { 
-        
+        public Seeder() {
+
+            _quizes.Add(
+                new Quiz { Id = 1, Title = "Progge - quiz" }
+            );
+
             _questions.Add(
-                new Question { Id = 1, Text = "Hva står API for?" }
+                new Question { Id = 1, Text = "Hva står API for?", QuizId = 1 }
             );
 
             _alternatives = new List<Alternative>
@@ -22,13 +26,12 @@ namespace quissile.wwwapi8.Data
                 new Alternative { Id = 2, Text = "Application Project Interface", QuestionId = 1 }
             };
 
-            _quizes.Add(
-                new Quiz { Id = 1, Title = "Progge - quiz" }
-            );
+            
         }
 
+        public List<Quiz> Quizes { get { return _quizes; } }
         public List<Question> Questions { get { return _questions; } }
         public List<Alternative> Alternatives { get { return _alternatives; } }
-        public List<Quiz> Quizes { get { return _quizes; } }
+        
     }
 }

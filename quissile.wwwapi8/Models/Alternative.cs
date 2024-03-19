@@ -12,6 +12,7 @@ namespace quissile.wwwapi8.Models
         [Column("is_answer")]
         public bool IsAnswer { get; set; } = false;
         [Column("question_id")]
+        [ForeignKey("question")]
         public int QuestionId { get; set; }
     }
 }

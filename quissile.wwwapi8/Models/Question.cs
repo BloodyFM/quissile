@@ -10,6 +10,7 @@ namespace quissile.wwwapi8.Models
         [Column("text")]
         public string Text { get; set; }
         [Column("quiz_id")]
+        [ForeignKey("quiz")]
         public int QuizId { get; set; }
         public ICollection<Alternative> Alternatives { get; set; } = new List<Alternative>();
     }

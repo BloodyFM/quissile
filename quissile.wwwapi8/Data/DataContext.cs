@@ -23,6 +23,7 @@ namespace quissile.wwwapi8.Data
             // Seed some example data
             modelBuilder.Entity<Question>().HasData(seeder.Questions);
             modelBuilder.Entity<Alternative>().HasData(seeder.Alternatives);
+            modelBuilder.Entity<Quiz>().HasData(seeder.Quizes);
 
             modelBuilder.Entity<Question>().Navigation(x => x.Alternatives).AutoInclude();
             modelBuilder.Entity<Quiz>().Navigation(x => x.Questions).AutoInclude();
