@@ -24,17 +24,12 @@ namespace quissile.wwwapi8.Data
             modelBuilder.Entity<Question>().HasData(seeder.Questions);
             modelBuilder.Entity<Alternative>().HasData(seeder.Alternatives);
 
-            modelBuilder.Entity<Alternative>().Navigation(x => x.Question).AutoInclude();
             modelBuilder.Entity<Question>().Navigation(x => x.Alternatives).AutoInclude();
-           // modelBuilder.Entity<QuestionAlternative>().HasData(seeder.QuestionAlternatives);
-           // modelBuilder.Entity<Quiz>().HasData(seeder.Quizes);
-         //   modelBuilder.Entity<QuizQuestion>().HasData(seeder.QuizQuestions);
+            modelBuilder.Entity<Quiz>().Navigation(x => x.Questions).AutoInclude();
         }
 
         public DbSet<Alternative> Alternatives { get; set; }
         public DbSet<Question> Questions { get; set; }
-        public DbSet<QuestionAlternative> QuestionAlternatives { get; set; }
         public DbSet<Quiz> Quizes { get; set; }
-        public DbSet<QuizQuestion> QuizQuestions { get; set; }
     }
 }

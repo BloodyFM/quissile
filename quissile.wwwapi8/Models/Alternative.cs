@@ -2,18 +2,16 @@
 
 namespace quissile.wwwapi8.Models
 {
-    [Table("alternatives")]
+    [Table("alternative")]
     public class Alternative
     {
         [Column("id")]
         public int Id { get; set; }
         [Column("text")]
         public string Text { get; set; }
-        [Column("answer")]
-        public bool Answer { get; set; }
-        [Column("fk_question_id")]
-        [ForeignKey("questions")]
-        public int? QuestionId { get; set; }
-        public Question? Question { get; set; }
+        [Column("is_answer")]
+        public bool IsAnswer { get; set; } = false;
+        [Column("question_id")]
+        public int QuestionId { get; set; }
     }
 }
