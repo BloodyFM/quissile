@@ -7,7 +7,7 @@ namespace quissile.wwwapi8.DTO
         public AlternativeDTO(Alternative alternative) { 
             Id = alternative.Id;
             Text = alternative.Text;
-            Answer = alternative.Answer;
+            Answer = alternative.IsAnswer;
         }
 
         public int Id { get; set; } 
