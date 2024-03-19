@@ -23,6 +23,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<DataContext>();
 builder.Services.AddScoped<IRepository<Question>, Repository<Question>>();
 builder.Services.AddScoped<IRepository<Alternative>, Repository<Alternative>>();
+builder.Services.AddScoped<IRepository<Quiz>, Repository<Quiz>>();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 var app = builder.Build();
@@ -37,5 +38,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.ConfigureQuestionEndpoint();
 app.ConfigureAlternativeEndpoint();
+app.ConfigureQuizEndpoint();
 app.Run();
 

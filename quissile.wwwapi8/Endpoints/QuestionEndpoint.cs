@@ -21,9 +21,9 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public static async Task<IResult> DeleteQuestionById(IRepository<Question> repository, int id)
         {
-            var resposne = await repository.DeleteById(id);
-            if (resposne != null) {
-                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(resposne) });
+            var response = await repository.DeleteById(id);
+            if (response != null) {
+                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(response) });
             }
             return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
         }
@@ -38,7 +38,8 @@ namespace quissile.wwwapi8.Endpoints
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
             }
-            originalQuestion.Text = (question.Text != "string" && question.Text != null) ? question.Text : originalQuestion.Text;
+            originalQuestion.Text = (question.Text != "string" && question.Text.Length > 0) ? question.Text : originalQuestion.Text;
+            originalQuestion.QuizId = question.QuizId;
 
             var response = await repository.Update(originalQuestion);
             if (response != null)
@@ -82,6 +83,7 @@ namespace quissile.wwwapi8.Endpoints
             var question = new Question
             {
                 Text = questionPost.Text,
+                QuizId = questionPost.QuizId
             };
 
             var response = await repository.Insert(question);
