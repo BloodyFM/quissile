@@ -32,13 +32,20 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateAlternativeById(IRepository<Alternative> repository, int id, AlternativePost alternative)
+        public static async Task<IResult> UpdateAlternativeById(IRepository<Alternative> repository, IRepository<Question> questionRepository, int id, AlternativePost alternative)
         {
             var originalAlternative = await repository.GetById(id);
             if (originalAlternative == null)
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
             }
+
+            var question = await questionRepository.GetById(alternative.QuestionId);
+            if (question == null)
+            {
+                return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
+            }
+
             originalAlternative.Text = (alternative.Text != "string" && alternative.Text.Length > 1) ? alternative.Text : originalAlternative.Text;
             originalAlternative.IsAnswer = alternative.IsAnswer;
             originalAlternative.QuestionId = alternative.QuestionId;
@@ -70,8 +77,14 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateAlternative(IRepository<Alternative> repository, AlternativePost alternativePost)
+        public static async Task<IResult> CreateAlternative(IRepository<Alternative> repository, IRepository<Question> questionRepository, AlternativePost alternativePost)
         {
+            var question = await questionRepository.GetById(alternativePost.QuestionId);
+            if (question == null)
+            {
+                return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
+            }
+
             var alternative = new Alternative
             {
                 Text = alternativePost.Text,
