@@ -31,13 +31,23 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, int id, QuestionPost question)
+        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, IRepository<Quiz> quizRepository, int id, QuestionPost question)
         {
             var originalQuestion = await repository.GetById(id);
             if (originalQuestion == null)
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
             }
+
+            if (question.QuizId != null)
+            {
+                var quiz = await quizRepository.GetById((int)question.QuizId);
+                if (quiz == null)
+                {
+                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
+                }
+            }
+
             originalQuestion.Text = (question.Text != "string" && question.Text.Length > 0) ? question.Text : originalQuestion.Text;
             originalQuestion.QuizId = question.QuizId;
 
@@ -78,8 +88,17 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateQuestion(IRepository<Question> repository, QuestionPost questionPost)
+        public static async Task<IResult> CreateQuestion(IRepository<Question> repository, IRepository<Quiz> quizRepository, QuestionPost questionPost)
         {
+            if (questionPost.QuizId != null)
+            {
+                var quiz = await quizRepository.GetById((int)questionPost.QuizId);
+                if (quiz == null)
+                {
+                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
+                }
+            }
+
             var question = new Question
             {
                 Text = questionPost.Text,
