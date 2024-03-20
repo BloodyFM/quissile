@@ -20,12 +20,58 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateQuiz(IRepository<Quiz> repository, QuizPost quizPost)
+        public static async Task<IResult> CreateQuiz(IRepository<Quiz> repository, IRepository<Question> questionRepository, QuizPost quizPost)
         {
             var quiz = new Quiz
             {
                 Title = quizPost.Title
             };
+
+            // Include questions
+            List<Question> questions = new List<Question>();
+            if (quizPost.Questions != null)
+            {
+                foreach (var question in quizPost.Questions)
+                {
+                    Question currentQuestion;
+                    if (question.QuizId != null)
+                    {
+                        var existingQuestion = await questionRepository.GetById((int)question.QuizId);
+                        if (existingQuestion == null)
+                        {
+                            return TypedResults.BadRequest(new Payload<string> { Status = "Failure", Data = "Invalid input" });
+                        }
+                        currentQuestion = existingQuestion;
+                    }
+                    else
+                    {
+                        var newQuestion = new Question
+                        {
+                            Text = question.Text,
+                            QuizId = quiz.Id
+                        };
+                        currentQuestion = newQuestion;
+                    }
+                    // Include alternatives
+                    List<Alternative> alternatives = new List<Alternative>();
+                    if (question.Alternatives != null)
+                    {
+                        foreach (var alternative in question.Alternatives)
+                        {
+                            var alt = new Alternative
+                            {
+                                Text = alternative.Text,
+                                IsAnswer = alternative.IsAnswer,
+                                QuestionId = currentQuestion.Id
+                            };
+                            alternatives.Add(alt);
+                        }
+                    }
+                    currentQuestion.Alternatives = alternatives;
+                    questions.Add(currentQuestion);
+                }
+            }
+            quiz.Questions = questions;
 
             var response = await repository.Insert(quiz);
             if (response != null)
