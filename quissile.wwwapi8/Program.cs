@@ -25,6 +25,15 @@ builder.Services.AddScoped<IRepository<Question>, Repository<Question>>();
 builder.Services.AddScoped<IRepository<Alternative>, Repository<Alternative>>();
 builder.Services.AddScoped<IRepository<Quiz>, Repository<Quiz>>();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactClient", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173")
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -35,6 +44,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowReactClient");
 app.UseHttpsRedirection();
 app.ConfigureQuestionEndpoint();
 app.ConfigureAlternativeEndpoint();
