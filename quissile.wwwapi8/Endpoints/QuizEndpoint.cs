@@ -20,58 +20,73 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateQuiz(IRepository<Quiz> repository, IRepository<Question> questionRepository, QuizPost quizPost)
+        public static async Task<IResult> CreateQuiz(IRepository<Quiz> repository, IRepository<Question> questionRepository, IRepository<Alternative> altRepository, QuizPost quizPost)
         {
             var quiz = new Quiz
             {
                 Title = quizPost.Title
             };
 
-            // Include questions
-            List<Question> questions = new List<Question>();
             if (quizPost.Questions != null)
             {
-                foreach (var question in quizPost.Questions)
+                List<Question> questions = new List<Question>();
+                foreach (var q in quizPost.Questions)
                 {
                     Question currentQuestion;
-                    if (question.QuizId != null)
+                    if (q.Id != null)
                     {
-                        var existingQuestion = await questionRepository.GetById((int)question.QuizId);
-                        if (existingQuestion == null)
+                        currentQuestion = await questionRepository.GetById((int)q.Id);
+                        if (currentQuestion == null)
                         {
                             return TypedResults.BadRequest(new Payload<string> { Status = "Failure", Data = "Invalid input" });
                         }
-                        currentQuestion = existingQuestion;
+                        currentQuestion.Text = q.Text;
+                        currentQuestion.QuizId = quiz.Id;
                     }
                     else
                     {
-                        var newQuestion = new Question
+                        currentQuestion = new Question
                         {
-                            Text = question.Text,
+                            Text = q.Text,
                             QuizId = quiz.Id
                         };
-                        currentQuestion = newQuestion;
                     }
+
                     // Include alternatives
                     List<Alternative> alternatives = new List<Alternative>();
-                    if (question.Alternatives != null)
+                    if (q.Alternatives != null)
                     {
-                        foreach (var alternative in question.Alternatives)
+                        foreach (var a in q.Alternatives)
                         {
-                            var alt = new Alternative
+                            Alternative currentAlternative;
+                            if (a.Id != null)
                             {
-                                Text = alternative.Text,
-                                IsAnswer = alternative.IsAnswer,
-                                QuestionId = currentQuestion.Id
-                            };
-                            alternatives.Add(alt);
+                                currentAlternative = await altRepository.GetById((int)a.Id);
+                                if (currentAlternative == null)
+                                {
+                                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
+                                }
+                                currentAlternative.Text = a.Text;
+                                currentAlternative.IsAnswer = a.IsAnswer;
+                                currentAlternative.QuestionId = currentQuestion.Id;
+                            }
+                            else
+                            {
+                                currentAlternative = new Alternative
+                                {
+                                    Text = a.Text,
+                                    IsAnswer = a.IsAnswer,
+                                    QuestionId = currentQuestion.Id
+                                };
+                            }
+                            alternatives.Add(currentAlternative);
                         }
                     }
                     currentQuestion.Alternatives = alternatives;
                     questions.Add(currentQuestion);
-                }
+                };
+                quiz.Questions = questions;
             }
-            quiz.Questions = questions;
 
             var response = await repository.Insert(quiz);
             if (response != null)
@@ -115,14 +130,75 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateQuizById(IRepository<Quiz> repository, int id, QuizPost quizPost)
+        public static async Task<IResult> UpdateQuizById(IRepository<Quiz> repository, IRepository<Question> questionRepository, IRepository<Alternative> altRepository, int id, QuizPost quizPut)
         {
             var originalQuiz = await repository.GetById(id);
             if (originalQuiz == null)
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
             }
-            originalQuiz.Title = (quizPost.Title != "string" && quizPost.Title != null) ? quizPost.Title : originalQuiz.Title;
+            originalQuiz.Title = (quizPut.Title != "string" && quizPut.Title != null) ? quizPut.Title : originalQuiz.Title;
+
+            if (quizPut.Questions != null)
+            {
+                List<Question> questions = new List<Question>();
+                foreach (var q in quizPut.Questions)
+                {
+                    Question currentQuestion;
+                    if (q.Id != null)
+                    {
+                        currentQuestion = await questionRepository.GetById((int)q.Id);
+                        if (currentQuestion == null)
+                        {
+                            return TypedResults.BadRequest(new Payload<string> { Status = "Failure", Data = "Invalid input" });
+                        }
+                        currentQuestion.Text = q.Text;
+                        currentQuestion.QuizId = originalQuiz.Id;
+                    }
+                    else
+                    {
+                        currentQuestion = new Question
+                        {
+                            Text = q.Text,
+                            QuizId = originalQuiz.Id
+                        };
+                    }
+
+                    // Include alternatives
+                    List<Alternative> alternatives = new List<Alternative>();
+                    if (q.Alternatives != null)
+                    {
+                        foreach (var a in q.Alternatives)
+                        {
+                            Alternative currentAlternative;
+                            if (a.Id != null)
+                            {
+                                currentAlternative = await altRepository.GetById((int)a.Id);
+                                if (currentAlternative == null)
+                                {
+                                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
+                                }
+                                currentAlternative.Text = a.Text;
+                                currentAlternative.IsAnswer = a.IsAnswer;
+                                currentAlternative.QuestionId = currentQuestion.Id;
+                            }
+                            else
+                            {
+                                currentAlternative = new Alternative
+                                {
+                                    Text = a.Text,
+                                    IsAnswer = a.IsAnswer,
+                                    QuestionId = currentQuestion.Id
+                                };
+                            }
+                            alternatives.Add(currentAlternative);
+                        }
+                    }
+                    currentQuestion.Alternatives = alternatives;
+                    questions.Add(currentQuestion);
+                };
+                originalQuiz.Questions = questions;
+            }
 
             var response = await repository.Update(originalQuiz);
             if (response != null)

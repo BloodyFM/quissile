@@ -3,6 +3,6 @@
     public class QuizPost
     {
         public string Title { get; set; }
-        public List<QuestionData>? Questions { get; set; }
+        public List<QuestionNullableId>? Questions { get; set; }
     }
 }
