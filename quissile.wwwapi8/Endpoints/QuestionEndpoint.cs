@@ -21,9 +21,9 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public static async Task<IResult> DeleteQuestionById(IRepository<Question> repository, int id)
         {
-            var resposne = await repository.DeleteById(id);
-            if (resposne != null) {
-                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(resposne) });
+            var response = await repository.DeleteById(id);
+            if (response != null) {
+                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(response) });
             }
             return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
         }
@@ -31,14 +31,57 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, int id, QuestionPost question)
+        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, IRepository<Quiz> quizRepository, IRepository<Alternative> altRepository, int id, QuestionPost question)
         {
             var originalQuestion = await repository.GetById(id);
             if (originalQuestion == null)
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
             }
-            originalQuestion.Text = (question.Text != "string" && question.Text != null) ? question.Text : originalQuestion.Text;
+
+            if (question.QuizId != null)
+            {
+                var quiz = await quizRepository.GetById((int)question.QuizId);
+                if (quiz == null)
+                {
+                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
+                }
+            }
+
+            originalQuestion.Text = (question.Text != "string" && question.Text.Length > 0) ? question.Text : originalQuestion.Text;
+            originalQuestion.QuizId = question.QuizId;
+
+            
+            if (question.Alternatives != null)
+            {
+                List<Alternative> alternatives = new List<Alternative>();
+                foreach (var alternative in question.Alternatives)
+                {
+                    if (alternative.Id != null)
+                    {
+                        var alt = await altRepository.GetById((int)alternative.Id);
+                        if (alt == null)
+                        {
+                            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
+                        }
+                        alt.Text = (alternative.Text != "string" && alternative.Text.Length > 0) ? alternative.Text : alt.Text;
+                        alt.IsAnswer = alternative.IsAnswer;
+                        alt.QuestionId = originalQuestion.Id;
+                        alternatives.Add(alt);
+                    }
+                    else
+                    {
+                        var alt = new Alternative
+                        {
+                            Text = alternative.Text,
+                            IsAnswer = alternative.IsAnswer,
+                            QuestionId = originalQuestion.Id
+                        };
+                        alternatives.Add(alt);
+                    }
+                }
+                originalQuestion.Alternatives = alternatives;
+            }
 
             var response = await repository.Update(originalQuestion);
             if (response != null)
@@ -77,12 +120,38 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateQuestion(IRepository<Question> repository, QuestionPost questionPost)
+        public static async Task<IResult> CreateQuestion(IRepository<Question> repository, IRepository<Quiz> quizRepository, QuestionPost questionPost)
         {
+            if (questionPost.QuizId != null)
+            {
+                var quiz = await quizRepository.GetById((int)questionPost.QuizId);
+                if (quiz == null)
+                {
+                    return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
+                }
+            }
+
             var question = new Question
             {
                 Text = questionPost.Text,
+                QuizId = questionPost.QuizId
             };
+
+            List<Alternative> alternatives = new List<Alternative>();
+            if (questionPost.Alternatives != null)
+            {
+                foreach (var alternative in questionPost.Alternatives)
+                {
+                    var alt = new Alternative
+                    {
+                        Text = alternative.Text,
+                        IsAnswer = alternative.IsAnswer,
+                        QuestionId = question.Id
+                    };
+                    alternatives.Add(alt);
+                }
+            }
+            question.Alternatives = alternatives;
 
             var response = await repository.Insert(question);
             if (response != null)

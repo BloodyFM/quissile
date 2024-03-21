@@ -2,12 +2,13 @@
 
 namespace quissile.wwwapi8.Models
 {
-    [Table("quizes")]
+    [Table("quiz")]
     public class Quiz
     {
         [Column("id")]
         public int Id { get; set; }
         [Column("title")]
         public string Title { get; set; }
+        public ICollection<Question> Questions { get; set; } = new List<Question>();
     }
 }

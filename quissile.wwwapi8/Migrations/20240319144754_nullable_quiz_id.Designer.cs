@@ -12,8 +12,8 @@ using quissile.wwwapi8.Data;
 namespace quissile.wwwapi8.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240315125213_update")]
-    partial class update
+    [Migration("20240319144754_nullable_quiz_id")]
+    partial class nullable_quiz_id
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,39 +34,39 @@ namespace quissile.wwwapi8.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("QuestionId")
+                    b.Property<bool>("IsAnswer")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_answer");
+
+                    b.Property<int>("QuestionId")
                         .HasColumnType("integer")
-                        .HasColumnName("fk_question_id");
+                        .HasColumnName("question_id");
 
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("text");
 
-                    b.Property<bool>("answer")
-                        .HasColumnType("boolean")
-                        .HasColumnName("answer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("alternatives");
+                    b.ToTable("alternative");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            IsAnswer = true,
                             QuestionId = 1,
-                            Text = "Application Programming Interface",
-                            answer = true
+                            Text = "Application Programming Interface"
                         },
                         new
                         {
                             Id = 2,
+                            IsAnswer = false,
                             QuestionId = 1,
-                            Text = "Application Project Interface",
-                            answer = false
+                            Text = "Application Project Interface"
                         });
                 });
 
@@ -79,6 +79,10 @@ namespace quissile.wwwapi8.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("QuizId")
+                        .HasColumnType("integer")
+                        .HasColumnName("quiz_id");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text")
@@ -86,36 +90,17 @@ namespace quissile.wwwapi8.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("questions");
+                    b.HasIndex("QuizId");
+
+                    b.ToTable("question");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            QuizId = 1,
                             Text = "Hva står API for?"
                         });
-                });
-
-            modelBuilder.Entity("quissile.wwwapi8.Models.QuestionAlternative", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AlternativeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("fk_alternative_id");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("fk_question_id");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("questions_alternatives");
                 });
 
             modelBuilder.Entity("quissile.wwwapi8.Models.Quiz", b =>
@@ -134,43 +119,40 @@ namespace quissile.wwwapi8.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("quizes");
-                });
+                    b.ToTable("quiz");
 
-            modelBuilder.Entity("quissile.wwwapi8.Models.QuizQuestion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("QuestionAlternativeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("fk_questions_alternatives_id");
-
-                    b.Property<int>("QuizId")
-                        .HasColumnType("integer")
-                        .HasColumnName("fk_quiz_id");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("quizes_questions");
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Title = "Progge - quiz"
+                        });
                 });
 
             modelBuilder.Entity("quissile.wwwapi8.Models.Alternative", b =>
                 {
-                    b.HasOne("quissile.wwwapi8.Models.Question", "Question")
+                    b.HasOne("quissile.wwwapi8.Models.Question", null)
                         .WithMany("Alternatives")
-                        .HasForeignKey("QuestionId");
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
 
-                    b.Navigation("Question");
+            modelBuilder.Entity("quissile.wwwapi8.Models.Question", b =>
+                {
+                    b.HasOne("quissile.wwwapi8.Models.Quiz", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("QuizId");
                 });
 
             modelBuilder.Entity("quissile.wwwapi8.Models.Question", b =>
                 {
                     b.Navigation("Alternatives");
+                });
+
+            modelBuilder.Entity("quissile.wwwapi8.Models.Quiz", b =>
+                {
+                    b.Navigation("Questions");
                 });
 #pragma warning restore 612, 618
         }

@@ -8,56 +8,54 @@ namespace quissile.wwwapi8.Endpoints
 {
     public static class AlternativeEndpoint
     {
-
-        // I did a copy paste from question endpoint xd
         public static void ConfigureAlternativeEndpoint(this WebApplication app)
         {
-            var questionGroup = app.MapGroup("alternative");
-            questionGroup.MapPost("/", CreateAlternative);
-            questionGroup.MapGet("/", GetAlternatives);
+            var alternativeGroup = app.MapGroup("alternatives");
+            alternativeGroup.MapPost("/", CreateAlternative);
+            alternativeGroup.MapGet("/", GetAlternatives);
+            alternativeGroup.MapPut("/{id}", UpdateAlternativeById);
+            alternativeGroup.MapDelete("/{id}", DeleteAlternativeById);
         }
+
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> DeleteQuestionById(IRepository<Question> repository, int id)
+        public static async Task<IResult> DeleteAlternativeById(IRepository<Alternative> repository, int id)
         {
-            var resposne = await repository.DeleteById(id);
-            if (resposne != null)
+            var response = await repository.DeleteById(id);
+            if (response != null)
             {
-                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(resposne) });
+                return TypedResults.Ok(new Payload<AlternativeDTO> { Data = new AlternativeDTO(response) });
             }
-            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
+            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
         }
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, int id, QuestionPost question)
+        public static async Task<IResult> UpdateAlternativeById(IRepository<Alternative> repository, IRepository<Question> questionRepository, int id, AlternativePost alternative)
         {
-            var originalQuestion = await repository.GetById(id);
-            if (originalQuestion == null)
+            var originalAlternative = await repository.GetById(id);
+            if (originalAlternative == null)
+            {
+                return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Alternative not found" });
+            }
+
+            var question = await questionRepository.GetById(alternative.QuestionId);
+            if (question == null)
             {
                 return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
             }
-            originalQuestion.Text = (question.Text != "string" && question.Text != null) ? question.Text : originalQuestion.Text;
 
-            var response = await repository.Update(originalQuestion);
+            originalAlternative.Text = (alternative.Text != "string" && alternative.Text.Length > 1) ? alternative.Text : originalAlternative.Text;
+            originalAlternative.IsAnswer = alternative.IsAnswer;
+            originalAlternative.QuestionId = alternative.QuestionId;
+
+            var response = await repository.Update(originalAlternative);
             if (response != null)
             {
-                return TypedResults.Created("", new Payload<QuestionDTO> { Data = new QuestionDTO(response) });
+                return TypedResults.Created("", new Payload<AlternativeDTO> { Data = new AlternativeDTO(response) });
             }
             else return TypedResults.BadRequest(new Payload<string> { Status = "Failure", Data = "Invalid input" });
-        }
-
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> GetQuestionById(IRepository<Question> repository, int id)
-        {
-            var response = await repository.GetById(id);
-            if (response != null)
-            {
-                return TypedResults.Ok(new Payload<QuestionDTO> { Data = new QuestionDTO(response) });
-            }
-            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -74,16 +72,24 @@ namespace quissile.wwwapi8.Endpoints
                 }
                 return TypedResults.Ok(response);
             }
-            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Failed to get all questions" });
+            return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Failed to get all alternatives" });
         }
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public static async Task<IResult> CreateAlternative(IRepository<Alternative> repository, AlternativePost alternativePost)
+        public static async Task<IResult> CreateAlternative(IRepository<Alternative> repository, IRepository<Question> questionRepository, AlternativePost alternativePost)
         {
+            var question = await questionRepository.GetById(alternativePost.QuestionId);
+            if (question == null)
+            {
+                return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Question not found" });
+            }
+
             var alternative = new Alternative
             {
-                Text = alternativePost.Text
+                Text = alternativePost.Text,
+                IsAnswer = alternativePost.IsAnswer,
+                QuestionId = alternativePost.QuestionId
             };
 
             var response = await repository.Insert(alternative);

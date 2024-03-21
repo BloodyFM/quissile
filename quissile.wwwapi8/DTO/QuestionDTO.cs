@@ -8,6 +8,7 @@ namespace quissile.wwwapi8.DTO
         {
             Id = question.Id;   
             Text = question.Text;
+            QuizId = question.QuizId;
             if (question.Alternatives != null)
             {
                 foreach (var alternative in question.Alternatives)
@@ -18,6 +19,7 @@ namespace quissile.wwwapi8.DTO
         }
         public int Id { get; set; }
         public string Text { get; set; }
-        public ICollection<AlternativeDTO> Alternatives { get; set; } = new List<AlternativeDTO>();
+        public int? QuizId { get; set; }
+        public ICollection<AlternativeDTO>? Alternatives { get; set; } = new List<AlternativeDTO>();
     }
 }
