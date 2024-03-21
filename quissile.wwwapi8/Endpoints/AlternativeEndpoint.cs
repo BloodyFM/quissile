@@ -10,7 +10,7 @@ namespace quissile.wwwapi8.Endpoints
     {
         public static void ConfigureAlternativeEndpoint(this WebApplication app)
         {
-            var alternativeGroup = app.MapGroup("alternative");
+            var alternativeGroup = app.MapGroup("alternatives");
             alternativeGroup.MapPost("/", CreateAlternative);
             alternativeGroup.MapGet("/", GetAlternatives);
             alternativeGroup.MapPut("/{id}", UpdateAlternativeById);
