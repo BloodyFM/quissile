@@ -117,11 +117,18 @@ namespace quissile.wwwapi8.Endpoints
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> DeleteQuizById(IRepository<Quiz> repository, int id)
+        public static async Task<IResult> DeleteQuizById(IRepository<Quiz> repository, IRepository<Question> questionRepository, int id)
         {
+            var quiz = await repository.GetById(id);
             var response = await repository.DeleteById(id);
             if (response != null)
             {
+                var questions = quiz.Questions;
+                foreach (var q in questions)
+                {
+                    await questionRepository.DeleteById(q.Id);
+                }
+                
                 return TypedResults.Ok(new Payload<QuizDTO> { Data = new QuizDTO(response) });
             }
             return TypedResults.NotFound(new Payload<string> { Status = "Failure", Data = "Quiz not found" });
