@@ -31,7 +31,7 @@ namespace quissile.wwwapi8.Endpoints
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, IRepository<Quiz> quizRepository, IRepository<Alternative> altRepository, int id, QuestionPut question)
+        public static async Task<IResult> UpdateQuestionById(IRepository<Question> repository, IRepository<Quiz> quizRepository, IRepository<Alternative> altRepository, int id, QuestionPost question)
         {
             var originalQuestion = await repository.GetById(id);
             if (originalQuestion == null)
@@ -51,9 +51,10 @@ namespace quissile.wwwapi8.Endpoints
             originalQuestion.Text = (question.Text != "string" && question.Text.Length > 0) ? question.Text : originalQuestion.Text;
             originalQuestion.QuizId = question.QuizId;
 
-            List<Alternative> alternatives = originalQuestion.Alternatives.ToList();
+            
             if (question.Alternatives != null)
             {
+                List<Alternative> alternatives = new List<Alternative>();
                 foreach (var alternative in question.Alternatives)
                 {
                     if (alternative.Id != null)
@@ -66,11 +67,7 @@ namespace quissile.wwwapi8.Endpoints
                         alt.Text = (alternative.Text != "string" && alternative.Text.Length > 0) ? alternative.Text : alt.Text;
                         alt.IsAnswer = alternative.IsAnswer;
                         alt.QuestionId = originalQuestion.Id;
-                        var altResponse = await altRepository.Update(alt);
-                        if (altResponse == null)
-                        {
-                            return TypedResults.BadRequest(new Payload<string> { Status = "Failure", Data = "Invalid input" });
-                        }
+                        alternatives.Add(alt);
                     }
                     else
                     {
@@ -83,9 +80,8 @@ namespace quissile.wwwapi8.Endpoints
                         alternatives.Add(alt);
                     }
                 }
+                originalQuestion.Alternatives = alternatives;
             }
-            originalQuestion.Alternatives = alternatives;
-
 
             var response = await repository.Update(originalQuestion);
             if (response != null)
