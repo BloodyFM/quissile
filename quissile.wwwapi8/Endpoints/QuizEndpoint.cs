@@ -10,7 +10,7 @@ namespace quissile.wwwapi8.Endpoints
     {
         public static void ConfigureQuizEndpoint(this WebApplication app)
         {
-            var quizGroup = app.MapGroup("quiz");
+            var quizGroup = app.MapGroup("quizes");
             quizGroup.MapPost("/", CreateQuiz);
             quizGroup.MapGet("/", GetQuizes);
             quizGroup.MapGet("/{id}", GetQuizById);
