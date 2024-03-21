@@ -6,9 +6,11 @@ namespace quissile.wwwapi8.Data
     public class DataContext : DbContext
     {
         private string _connectionString;
+        private readonly IConfiguration configuration;
 
-        public DataContext(DbContextOptions<DataContext> options) : base(options) {
-            var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        public DataContext(DbContextOptions<DataContext> options, IConfiguration configuration) : base(options)
+        {
+            this.configuration = configuration;
             _connectionString = configuration.GetValue<string>("ConnectionStrings:DefaultConnectionString")!;
         }
 
