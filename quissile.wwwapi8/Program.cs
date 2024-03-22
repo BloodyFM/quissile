@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactClient", builder =>
     {
-        builder.WithOrigins("http://localhost:5173")
+        builder.WithOrigins("http://localhost:5173", "https://quizzilecli.netlify.app/")
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
